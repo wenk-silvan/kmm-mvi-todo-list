@@ -48,4 +48,5 @@ dependencies {
     implementation("androidx.activity:activity-compose:1.6.1")
     implementation("io.insert-koin:koin-core:3.3.3")
     implementation("io.insert-koin:koin-android:3.3.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
 }

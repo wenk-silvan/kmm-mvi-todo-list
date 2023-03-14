@@ -1,40 +1,59 @@
 package ch.ti8m.kmmsampleapp.android
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import ch.ti8m.kmmsampleapp.Greeting
+import ch.ti8m.kmmsampleapp.android.ui.TodoListScreen
+import ch.ti8m.kmmsampleapp.app.TodoListSideEffect
+import ch.ti8m.kmmsampleapp.app.TodoListStore
+import kotlinx.coroutines.flow.filterIsInstance
+import org.koin.android.ext.android.inject
 
 class MainActivity : ComponentActivity() {
+    @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             MyApplicationTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colors.background
+                val store: TodoListStore by inject()
+                val scaffoldState = rememberScaffoldState()
+                val error = store.observeSideEffect()
+                    .filterIsInstance<TodoListSideEffect.Error>()
+                    .collectAsState(null)
+                LaunchedEffect(error.value) {
+                    error.value?.let {
+                        scaffoldState.snackbarHostState.showSnackbar(
+                            it.error.message.toString()
+                        )
+                    }
+                }
+                Scaffold(
+                    scaffoldState = scaffoldState,
+                    snackbarHost = { hostState ->
+                        SnackbarHost(
+                            hostState = hostState,
+                            modifier = Modifier.padding(
+                                WindowInsets.systemBars.asPaddingValues()
+                            )
+                        )
+                    }
                 ) {
-                    GreetingView(Greeting().greet())
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(it),
+                        color = MaterialTheme.colors.background
+                    ) {
+                        TodoListScreen(store)
+                    }
                 }
             }
         }
-    }
-}
-
-@Composable
-fun GreetingView(text: String) {
-    Text(text = text)
-}
-
-@Preview
-@Composable
-fun DefaultPreview() {
-    MyApplicationTheme {
-        GreetingView("Hello, Android!")
     }
 }
