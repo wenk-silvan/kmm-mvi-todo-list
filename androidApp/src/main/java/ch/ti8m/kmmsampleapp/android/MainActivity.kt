@@ -27,10 +27,8 @@ class MainActivity : ComponentActivity() {
                     .filterIsInstance<TodoListSideEffect.Error>()
                     .collectAsState(null)
                 LaunchedEffect(error.value) {
-                    error.value?.let {
-                        scaffoldState.snackbarHostState.showSnackbar(
-                            it.error.message.toString()
-                        )
+                    error.value?.exception?.message?.let {
+                        scaffoldState.snackbarHostState.showSnackbar(it)
                     }
                 }
                 Scaffold(

@@ -40,7 +40,7 @@ fun TodoListScreen(store: TodoListStore) {
             TextField(
                 modifier = Modifier.weight(1f),
                 value = state.newItem,
-                onValueChange = { store.dispatch(TodoListAction.Update(it)) },
+                onValueChange = { store.dispatch(TodoListAction.UpdateNewItem(it)) },
                 singleLine = true,
             )
             IconButton(onClick = {
@@ -61,7 +61,7 @@ fun TodoListScreen(store: TodoListStore) {
             itemsIndexed(
                 items = state.todoList,
                 key = { index, _ -> index },
-            ) { index, todoItem ->
+            ) { _, todoItem ->
                 TodoListItem(
                     modifier = Modifier
                         .animateItemPlacement()
@@ -69,7 +69,7 @@ fun TodoListScreen(store: TodoListStore) {
                         .height(48.dp),
                     item = todoItem,
                     onRemove = {
-                        store.dispatch(TodoListAction.Remove(index))
+                        store.dispatch(TodoListAction.Remove(todoItem.created))
                     }
                 )
             }

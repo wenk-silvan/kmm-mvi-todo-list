@@ -18,7 +18,12 @@ class App : Application() {
     }
 
     private val appModule = module {
-        single { TodoListRepository.create(BuildConfig.DEBUG) }
+        single {
+            TodoListRepository.create(
+                context = get(),
+                withLog = BuildConfig.DEBUG,
+            )
+        }
         single { TodoListStore(get()) }
     }
 

@@ -1,7 +1,7 @@
 package ch.ti8m.kmmsampleapp.app
 
-import ch.ti8m.kmmsampleapp.core.repository.TodoListRepository
 import ch.ti8m.kmmsampleapp.core.entity.TodoItem
+import ch.ti8m.kmmsampleapp.core.repository.TodoListRepository
 import ch.ti8m.kmmsampleapp.core.util.DateTimeUtil
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.CoroutineScope
@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDateTime
 
 data class TodoListState(
     val todoList: List<TodoItem>,
@@ -19,24 +20,24 @@ data class TodoListState(
 
 sealed class TodoListAction : Action {
     data class Add(val text: String) : TodoListAction()
-    data class Update(val text: String) : TodoListAction()
-    data class Remove(val index: Int) : TodoListAction()
-    data class Error(val error: Exception) : TodoListAction()
+    data class UpdateNewItem(val text: String) : TodoListAction()
+    data class Remove(val dateTime: LocalDateTime) : TodoListAction()
+    data class Error(val exception: Exception) : TodoListAction()
 }
 
 sealed class TodoListSideEffect : Effect {
-    data class Error(val error: Exception) : TodoListSideEffect()
+    data class Error(val exception: Exception) : TodoListSideEffect()
 }
 
 class TodoListStore(
-    private val repository: TodoListRepository
+    private val repository: TodoListRepository,
 ) : Store<TodoListState, TodoListAction, TodoListSideEffect>,
     CoroutineScope by CoroutineScope(Dispatchers.Main) {
 
     private val state = MutableStateFlow(
         TodoListState(
             todoList = repository.load(),
-            newItem = ""
+            newItem = "",
         ),
     )
     private val sideEffect = MutableSharedFlow<TodoListSideEffect>()
@@ -51,23 +52,35 @@ class TodoListStore(
 
         val newState = when (action) {
             is TodoListAction.Add -> {
-                repository.add(
-                    TodoItem(
-                        text = action.text,
-                        created = DateTimeUtil.now()
+                if (action.text == "") {
+                    launch {
+                        sideEffect.emit(TodoListSideEffect.Error(IllegalArgumentException("Can't add empty item")))
+                    }
+                    oldState
+                } else {
+                    repository.add(
+                        TodoItem(
+                            text = action.text,
+                            created = DateTimeUtil.now()
+                        )
                     )
-                )
-                oldState.copy(todoList = repository.load())
+                    oldState.copy(todoList = repository.load())
+                }
             }
-            is TodoListAction.Update -> {
+            is TodoListAction.UpdateNewItem -> {
                 oldState.copy(newItem = action.text)
             }
             is TodoListAction.Remove -> {
-                repository.remove(action.index)
+                repository.remove(action.dateTime)
                 oldState.copy(todoList = repository.load())
             }
             is TodoListAction.Error -> {
-                launch { sideEffect.emit(TodoListSideEffect.Error(action.error)) }
+                Napier.e(
+                    tag = "TodoListStore",
+                    throwable = action.exception,
+                    message = action.exception.message ?: "No message"
+                )
+                launch { sideEffect.emit(TodoListSideEffect.Error(action.exception)) }
                 oldState
             }
         }

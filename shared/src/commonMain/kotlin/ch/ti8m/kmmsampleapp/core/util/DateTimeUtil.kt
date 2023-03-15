@@ -6,8 +6,11 @@ object DateTimeUtil {
     fun now() =
         Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
 
-    fun toEpochMillis(dateTime: LocalDateTime) =
-        dateTime.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
+    fun toString(dateTime: LocalDateTime) =
+        dateTime.toInstant(TimeZone.currentSystemDefault()).toString()
+
+    fun fromString(dateTime: String) =
+        Instant.parse(dateTime).toLocalDateTime(TimeZone.currentSystemDefault())
 
     fun formatNoteDate(dateTime: LocalDateTime): String {
         val month = dateTime.month.name.lowercase().take(3).replaceFirstChar { it.uppercase() }
