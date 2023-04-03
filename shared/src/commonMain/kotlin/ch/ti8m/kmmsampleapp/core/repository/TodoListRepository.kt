@@ -1,31 +1,30 @@
 package ch.ti8m.kmmsampleapp.core.repository
 
-import ch.ti8m.kmmsampleapp.core.datasource.storage.TodoListPreferences
 import ch.ti8m.kmmsampleapp.core.entity.TodoItem
 import ch.ti8m.kmmsampleapp.core.util.DateTimeUtil
+import com.russhwolf.settings.Settings
+import com.russhwolf.settings.get
 import kotlinx.datetime.LocalDateTime
 
 class TodoListRepository(
-    private val preferences: TodoListPreferences,
+    private val settings: Settings,
 ) {
-
     fun add(item: TodoItem) {
-        preferences.put(
+        settings.putString(
             key = DateTimeUtil.toString(item.created),
             value = item.text,
         )
     }
 
     fun remove(dateTime: LocalDateTime) {
-        preferences.remove(DateTimeUtil.toString(dateTime))
+        settings.remove(DateTimeUtil.toString(dateTime))
     }
 
-    fun load(): List<TodoItem> = preferences
-        .getAll()
-        .map {
+    fun load(): List<TodoItem> = settings.keys
+        .map { key ->
             TodoItem(
-                text = it.value.substringAfter('='),
-                created = DateTimeUtil.fromString(it.key),
+                text = settings.get<String>(key)!!.substringAfter('='),
+                created = DateTimeUtil.fromString(key),
             )
         }.toList()
 

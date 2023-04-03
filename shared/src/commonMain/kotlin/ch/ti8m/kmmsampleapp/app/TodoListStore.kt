@@ -16,13 +16,13 @@ import kotlinx.datetime.LocalDateTime
 data class TodoListState(
     val todoList: List<TodoItem>,
     val newItem: String,
+    val error: Boolean,
 ) : State
 
 sealed class TodoListAction : Action {
     data class Add(val text: String) : TodoListAction()
     data class UpdateNewItem(val text: String) : TodoListAction()
     data class Remove(val dateTime: LocalDateTime) : TodoListAction()
-    data class Error(val exception: Exception) : TodoListAction()
 }
 
 sealed class TodoListSideEffect : Effect {
@@ -38,6 +38,7 @@ class TodoListStore(
         TodoListState(
             todoList = repository.load(),
             newItem = "",
+            error = false,
         ),
     )
     private val sideEffect = MutableSharedFlow<TodoListSideEffect>()
@@ -73,15 +74,6 @@ class TodoListStore(
             is TodoListAction.Remove -> {
                 repository.remove(action.dateTime)
                 oldState.copy(todoList = repository.load())
-            }
-            is TodoListAction.Error -> {
-                Napier.e(
-                    tag = "TodoListStore",
-                    throwable = action.exception,
-                    message = action.exception.message ?: "No message"
-                )
-                launch { sideEffect.emit(TodoListSideEffect.Error(action.exception)) }
-                oldState
             }
         }
 
