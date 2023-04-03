@@ -15,8 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import ch.ti8m.kmmsampleapp.app.TodoListAction
-import ch.ti8m.kmmsampleapp.app.TodoListStore
+import ch.ti8m.kmmsampleapp.app.*
 import ch.ti8m.kmmsampleapp.core.entity.TodoItem
 import ch.ti8m.kmmsampleapp.core.util.DateTimeUtil
 
@@ -36,24 +35,7 @@ fun TodoListScreen(store: TodoListStore) {
             style = MaterialTheme.typography.h4,
         )
         Spacer(modifier = Modifier.height(16.dp))
-        Row(modifier = Modifier.fillMaxWidth()) {
-            TextField(
-                modifier = Modifier.weight(1f),
-                value = state.newItem,
-                onValueChange = { store.dispatch(TodoListAction.UpdateNewItem(it)) },
-                singleLine = true,
-            )
-            IconButton(onClick = {
-                store.dispatch(
-                    TodoListAction.Add(text = state.newItem)
-                )
-            }) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Adds todo item",
-                )
-            }
-        }
+        AddItemRow(store.addItemStore)
         Spacer(modifier = Modifier.height(16.dp))
         LazyColumn(
             modifier = Modifier.weight(1f)
@@ -95,6 +77,28 @@ private fun TodoListItem(
                 imageVector = Icons.Default.Close,
                 contentDescription = "Removes todo item",
                 tint = Color.Black
+            )
+        }
+    }
+}
+
+@Composable
+private fun AddItemRow(store: AddItemStore) {
+    val state by store.observeState().collectAsState()
+
+    Row(modifier = Modifier.fillMaxWidth()) {
+        TextField(
+            modifier = Modifier.weight(1f),
+            value = state.newItem,
+            onValueChange = { store.dispatch(AddItemAction.UpdateNewItem(it)) },
+            singleLine = true,
+        )
+        IconButton(onClick = {
+            store.dispatch(AddItemAction.Add(text = state.newItem))
+        }) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Adds todo item",
             )
         }
     }
