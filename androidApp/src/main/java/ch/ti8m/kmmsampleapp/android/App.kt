@@ -1,6 +1,7 @@
 package ch.ti8m.kmmsampleapp.android
 
 import android.app.Application
+import ch.ti8m.kmmsampleapp.app.AddItemStore
 import ch.ti8m.kmmsampleapp.app.TodoListStore
 import ch.ti8m.kmmsampleapp.core.repository.TodoListRepository
 import ch.ti8m.kmmsampleapp.create
@@ -18,13 +19,9 @@ class App : Application() {
     }
 
     private val appModule = module {
-        single {
-            TodoListRepository.create(
-                context = get(),
-                withLog = BuildConfig.DEBUG,
-            )
-        }
+        single { TodoListRepository.create(context = get(), withLog = BuildConfig.DEBUG) }
         single { TodoListStore(get()) }
+        single { AddItemStore(get(), get()) }
     }
 
     private fun initKoin() {

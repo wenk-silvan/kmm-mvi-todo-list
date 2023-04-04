@@ -2,7 +2,6 @@ package ch.ti8m.kmmsampleapp.app
 
 import ch.ti8m.kmmsampleapp.core.entity.TodoItem
 import ch.ti8m.kmmsampleapp.core.repository.TodoListRepository
-import ch.ti8m.kmmsampleapp.core.util.DateTimeUtil
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -10,24 +9,18 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
 
 data class TodoListState(
     val todoList: List<TodoItem>,
-    val newItem: String,
-    val error: Boolean,
 ) : State
 
 sealed class TodoListAction : Action {
-    data class Add(val text: String) : TodoListAction()
-    data class UpdateNewItem(val text: String) : TodoListAction()
+    object Load : TodoListAction()
     data class Remove(val dateTime: LocalDateTime) : TodoListAction()
 }
 
-sealed class TodoListSideEffect : Effect {
-    data class Error(val exception: Exception) : TodoListSideEffect()
-}
+sealed class TodoListSideEffect : Effect
 
 class TodoListStore(
     private val repository: TodoListRepository,
@@ -35,11 +28,7 @@ class TodoListStore(
     CoroutineScope by CoroutineScope(Dispatchers.Main) {
 
     private val state = MutableStateFlow(
-        TodoListState(
-            todoList = repository.load(),
-            newItem = "",
-            error = false,
-        ),
+        TodoListState(todoList = repository.load()),
     )
     private val sideEffect = MutableSharedFlow<TodoListSideEffect>()
 
@@ -52,25 +41,7 @@ class TodoListStore(
         val oldState = state.value
 
         val newState = when (action) {
-            is TodoListAction.Add -> {
-                if (action.text == "") {
-                    launch {
-                        sideEffect.emit(TodoListSideEffect.Error(IllegalArgumentException("Can't add empty item")))
-                    }
-                    oldState
-                } else {
-                    repository.add(
-                        TodoItem(
-                            text = action.text,
-                            created = DateTimeUtil.now()
-                        )
-                    )
-                    oldState.copy(todoList = repository.load())
-                }
-            }
-            is TodoListAction.UpdateNewItem -> {
-                oldState.copy(newItem = action.text)
-            }
+            is TodoListAction.Load -> oldState.copy(todoList = repository.load())
             is TodoListAction.Remove -> {
                 repository.remove(action.dateTime)
                 oldState.copy(todoList = repository.load())
