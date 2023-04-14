@@ -1,6 +1,7 @@
 package ch.ti8m.kmmsampleapp.android.ui
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -29,12 +30,9 @@ fun TodoListScreen(store: TodoListStore) {
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(
-            text = "Your list",
-            style = MaterialTheme.typography.h4,
-        )
+        Text(text = "Your list", style = MaterialTheme.typography.h4)
         Spacer(modifier = Modifier.height(16.dp))
         Row(modifier = Modifier.fillMaxWidth()) {
             TextField(
@@ -43,15 +41,8 @@ fun TodoListScreen(store: TodoListStore) {
                 onValueChange = { store.dispatch(TodoListAction.UpdateNewItem(it)) },
                 singleLine = true,
             )
-            IconButton(onClick = {
-                store.dispatch(
-                    TodoListAction.Add(text = state.newItem)
-                )
-            }) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Adds todo item",
-                )
+            IconButton(onClick = { store.dispatch(TodoListAction.Add(text = state.newItem)) }) {
+                Icon(imageVector = Icons.Default.Add, contentDescription = "Adds todo item")
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
@@ -66,11 +57,10 @@ fun TodoListScreen(store: TodoListStore) {
                     modifier = Modifier
                         .animateItemPlacement()
                         .fillMaxWidth()
+                        .clickable { store.dispatch(TodoListAction.ShowItemDetail(todoItem)) }
                         .height(48.dp),
                     item = todoItem,
-                    onRemove = {
-                        store.dispatch(TodoListAction.Remove(todoItem.created))
-                    }
+                    onRemove = { store.dispatch(TodoListAction.Remove(todoItem.created)) },
                 )
             }
         }
@@ -83,10 +73,7 @@ private fun TodoListItem(
     item: TodoItem,
     onRemove: () -> Unit,
 ) {
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         Text(item.text)
         Spacer(modifier = Modifier.weight(1f))
         Text(DateTimeUtil.formatNoteDate(item.created))

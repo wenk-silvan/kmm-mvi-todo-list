@@ -16,6 +16,7 @@ import kotlinx.datetime.LocalDateTime
 data class TodoListState(
     val todoList: List<TodoItem>,
     val newItem: String,
+    val editItem: TodoItem,
     val error: Boolean,
 ) : State
 
@@ -23,10 +24,15 @@ sealed class TodoListAction : Action {
     data class Add(val text: String) : TodoListAction()
     data class UpdateNewItem(val text: String) : TodoListAction()
     data class Remove(val dateTime: LocalDateTime) : TodoListAction()
+    data class UpdateEditItemText(val text: String) : TodoListAction()
+    data class ShowItemDetail(val item: TodoItem) : TodoListAction()
+    object SaveEditItem : TodoListAction()
 }
 
 sealed class TodoListSideEffect : Effect {
     data class Error(val exception: Exception) : TodoListSideEffect()
+    object NavigateToItemDetailScreen : TodoListSideEffect()
+    object NavigateToItemListScreen : TodoListSideEffect()
 }
 
 class TodoListStore(
@@ -38,6 +44,7 @@ class TodoListStore(
         TodoListState(
             todoList = repository.load(),
             newItem = "",
+            editItem = TodoItem(text = "", created = DateTimeUtil.now()),
             error = false,
         ),
     )
@@ -59,12 +66,7 @@ class TodoListStore(
                     }
                     oldState
                 } else {
-                    repository.add(
-                        TodoItem(
-                            text = action.text,
-                            created = DateTimeUtil.now()
-                        )
-                    )
+                    repository.add(TodoItem(text = action.text, created = DateTimeUtil.now()))
                     oldState.copy(todoList = repository.load())
                 }
             }
@@ -74,6 +76,29 @@ class TodoListStore(
             is TodoListAction.Remove -> {
                 repository.remove(action.dateTime)
                 oldState.copy(todoList = repository.load())
+            }
+            is TodoListAction.UpdateEditItemText -> {
+                oldState.copy(editItem = oldState.editItem.copy(text = action.text))
+            }
+            is TodoListAction.ShowItemDetail -> {
+                launch {
+                    sideEffect.emit(TodoListSideEffect.NavigateToItemDetailScreen)
+                }
+                oldState.copy(editItem = action.item)
+            }
+            is TodoListAction.SaveEditItem -> {
+                if (oldState.editItem.text == "") {
+                    launch {
+                        sideEffect.emit(TodoListSideEffect.Error(IllegalArgumentException("Can't add empty item")))
+                    }
+                    oldState
+                } else {
+                    launch {
+                        sideEffect.emit(TodoListSideEffect.NavigateToItemListScreen)
+                    }
+                    repository.update(text = oldState.editItem.text, created = oldState.editItem.created)
+                    oldState.copy(todoList = repository.load())
+                }
             }
         }
 

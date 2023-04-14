@@ -9,7 +9,8 @@ import androidx.compose.material.*
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
-import ch.ti8m.kmmsampleapp.android.ui.TodoListScreen
+import androidx.navigation.compose.rememberNavController
+import ch.ti8m.kmmsampleapp.android.ui.Navigation
 import ch.ti8m.kmmsampleapp.app.TodoListSideEffect
 import ch.ti8m.kmmsampleapp.app.TodoListStore
 import kotlinx.coroutines.flow.filterIsInstance
@@ -21,6 +22,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MyApplicationTheme {
+                val navController = rememberNavController()
                 val store: TodoListStore by inject()
                 val scaffoldState = rememberScaffoldState()
                 val error = store.observeSideEffect()
@@ -36,19 +38,15 @@ class MainActivity : ComponentActivity() {
                     snackbarHost = { hostState ->
                         SnackbarHost(
                             hostState = hostState,
-                            modifier = Modifier.padding(
-                                WindowInsets.systemBars.asPaddingValues()
-                            )
+                            modifier = Modifier.padding(WindowInsets.systemBars.asPaddingValues())
                         )
                     }
                 ) {
                     Surface(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(it),
+                        modifier = Modifier.fillMaxSize().padding(it),
                         color = MaterialTheme.colors.background
                     ) {
-                        TodoListScreen(store)
+                        Navigation(navController, store)
                     }
                 }
             }

@@ -15,6 +15,10 @@ class TodoListRepository(
             value = item.text,
         )
     }
+    fun update(text: String, created: LocalDateTime) {
+        remove(created)
+        add(TodoItem(text = text, created))
+    }
 
     fun remove(dateTime: LocalDateTime) {
         settings.remove(DateTimeUtil.toString(dateTime))
