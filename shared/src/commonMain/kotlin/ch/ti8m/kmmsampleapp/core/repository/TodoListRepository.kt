@@ -11,7 +11,7 @@ class TodoListRepository(
 ) {
     fun add(item: TodoItem) {
         settings.putString(
-            key = DateTimeUtil.toString(item.created),
+            key = SETTINGS_KEY + DateTimeUtil.toString(item.created),
             value = item.text,
         )
     }
@@ -21,16 +21,27 @@ class TodoListRepository(
     }
 
     fun remove(dateTime: LocalDateTime) {
-        settings.remove(DateTimeUtil.toString(dateTime))
+        settings.remove(SETTINGS_KEY + DateTimeUtil.toString(dateTime))
     }
 
-    fun load(): List<TodoItem> = settings.keys
-        .map { key ->
-            TodoItem(
-                text = settings.get<String>(key)!!.substringAfter('='),
-                created = DateTimeUtil.fromString(key),
-            )
-        }.toList()
+    fun load(): List<TodoItem> {
+        return try {
+            settings.keys
+                .filter { key -> key.startsWith(SETTINGS_KEY) }
+                .map { key ->
+                    TodoItem(
+                        text = settings[key]!!,
+                        created = DateTimeUtil.fromString(key.substringAfter(SETTINGS_KEY)),
+                    )
+                }
+                .sortedByDescending { item -> item.created }
+                .toList()
+        } catch(ex: Exception) {
+            listOf(TodoItem(ex.toString(), DateTimeUtil.now()))
+        }
+    }
 
-    companion object
+    companion object {
+        private const val SETTINGS_KEY = "TODOLIST"
+    }
 }

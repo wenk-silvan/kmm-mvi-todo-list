@@ -8,3 +8,7 @@ captures
 .cxx
 local.properties
 xcuserdata
+*.log
+contents.xcworkspacedata
+/iosApp/iosApp.xcodeproj/project.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings
+/iosApp/iosApp.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist

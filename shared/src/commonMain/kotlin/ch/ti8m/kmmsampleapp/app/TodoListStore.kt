@@ -10,6 +10,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
 
@@ -50,6 +52,18 @@ class TodoListStore(
     )
     private val sideEffect = MutableSharedFlow<TodoListSideEffect>()
 
+    fun onStateChange(newState: ((TodoListState) -> Unit)) {
+        state.onEach {
+            newState.invoke(it)
+        }.launchIn(CoroutineScope(Dispatchers.Main))
+    }
+
+    fun onSideEffectEmitted(newSideEffect: ((TodoListSideEffect) -> Unit)) {
+        sideEffect.onEach {
+            newSideEffect.invoke(it)
+        }.launchIn(CoroutineScope(Dispatchers.Main))
+    }
+
     override fun observeState(): StateFlow<TodoListState> = state
 
     override fun observeSideEffect(): Flow<TodoListSideEffect> = sideEffect
@@ -67,7 +81,7 @@ class TodoListStore(
                     oldState
                 } else {
                     repository.add(TodoItem(text = action.text, created = DateTimeUtil.now()))
-                    oldState.copy(todoList = repository.load())
+                    oldState.copy(todoList = repository.load(), newItem = "")
                 }
             }
             is TodoListAction.UpdateNewItem -> {

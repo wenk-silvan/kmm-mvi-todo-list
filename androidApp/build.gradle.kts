@@ -17,7 +17,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.3"
+        kotlinCompilerExtensionVersion = "1.4.1"
     }
     packagingOptions {
         resources {
@@ -50,4 +50,5 @@ dependencies {
     implementation("io.insert-koin:koin-core:3.3.3")
     implementation("io.insert-koin:koin-android:3.3.3")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.1.5")
 }
