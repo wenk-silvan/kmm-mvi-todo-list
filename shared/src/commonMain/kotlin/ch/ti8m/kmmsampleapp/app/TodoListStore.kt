@@ -19,7 +19,6 @@ data class TodoListState(
     val todoList: List<TodoItem>,
     val newItem: String,
     val editItem: TodoItem,
-    val error: Boolean,
 ) : State
 
 sealed class TodoListAction : Action {
@@ -47,7 +46,6 @@ class TodoListStore(
             todoList = repository.load(),
             newItem = "",
             editItem = TodoItem(text = "", created = DateTimeUtil.now()),
-            error = false,
         ),
     )
     private val sideEffect = MutableSharedFlow<TodoListSideEffect>()
