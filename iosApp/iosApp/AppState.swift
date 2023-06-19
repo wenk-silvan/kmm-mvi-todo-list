@@ -14,6 +14,8 @@ class AppState: ObservableObject {
     @Published var todoListState : TodoListState?
     
     @Published var isItemSelected = false
+    
+    @Published var showError = false
 
     init(store: TodoListStore?) {
         if (store != nil) {
@@ -27,7 +29,7 @@ class AppState: ObservableObject {
         }
         store.onSideEffectEmitted { sideEffect in
             if (sideEffect is TodoListSideEffect.Error) {
-                print("Error")
+                self.showError = true
             }
             else if (sideEffect is TodoListSideEffect.NavigateToItemListScreen) {
                 self.isItemSelected = false

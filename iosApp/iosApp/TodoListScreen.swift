@@ -40,6 +40,9 @@ struct TodoListScreen<Destination: View>: View {
                     .font(.body)
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
+                    .alert(isPresented: $state.showError) {
+                        Alert(title: Text("Error"), message: Text("Input is not valid"), dismissButton: .default(Text("Ok")))
+                    }
                 Button(action: onClickAddItem) {
                     Image(systemName: "plus").foregroundColor(.black)
                 }
