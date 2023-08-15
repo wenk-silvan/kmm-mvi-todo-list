@@ -9,23 +9,49 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import ch.ti8m.kmmsampleapp.app.TodoListAction
-import ch.ti8m.kmmsampleapp.app.TodoListStore
+import ch.ti8m.kmmsampleapp.app.AppState
+import ch.ti8m.kmmsampleapp.app.AppStore
+import ch.ti8m.kmmsampleapp.app.MessageHandle
+import ch.ti8m.kmmsampleapp.app.navigation.NavigationMessage
+import ch.ti8m.kmmsampleapp.app.todolist.TodoListMessage
 import ch.ti8m.kmmsampleapp.core.entity.TodoItem
 import ch.ti8m.kmmsampleapp.core.util.DateTimeUtil
 
+@Composable
+fun AppStore.getState(): AppState {
+    var state by remember { mutableStateOf(state()) }
+    LaunchedEffect(this) {
+        observe { state = it }
+    }
+    return state
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun TodoListScreen(store: TodoListStore) {
-    val state by store.observeState().collectAsState()
+fun TodoListScreen(store: AppStore, messageHandle: MessageHandle) {
+    TodoListContent(
+        store.getState(),
+        onNewItemTextChanged = { messageHandle(TodoListMessage.UpdateNewItemText(it)) },
+        onAddNewItemClicked = { messageHandle(TodoListMessage.Add(it)) },
+        onItemDetailClicked = { messageHandle(NavigationMessage.NavigateToTodoItem(it)) },
+        onItemDeleteClicked = { messageHandle(TodoListMessage.Remove(it)) }
+    )
+}
 
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun TodoListContent(
+    state: AppState,
+    onNewItemTextChanged: (String) -> Unit = {},
+    onAddNewItemClicked: (String) -> Unit = {},
+    onItemDetailClicked: (TodoItem) -> Unit = {},
+    onItemDeleteClicked: (TodoItem) -> Unit = {}
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -37,11 +63,11 @@ fun TodoListScreen(store: TodoListStore) {
         Row(modifier = Modifier.fillMaxWidth()) {
             TextField(
                 modifier = Modifier.weight(1f),
-                value = state.newItem,
-                onValueChange = { store.dispatch(TodoListAction.UpdateNewItem(it)) },
+                value = state.newItemText,
+                onValueChange = onNewItemTextChanged,
                 singleLine = true,
             )
-            IconButton(onClick = { store.dispatch(TodoListAction.Add(text = state.newItem)) }) {
+            IconButton(onClick = { onAddNewItemClicked(state.newItemText) }) {
                 Icon(imageVector = Icons.Default.Add, contentDescription = "Adds todo item")
             }
         }
@@ -54,13 +80,10 @@ fun TodoListScreen(store: TodoListStore) {
                 key = { index, _ -> index },
             ) { _, todoItem ->
                 TodoListItem(
-                    modifier = Modifier
-                        .animateItemPlacement()
-                        .fillMaxWidth()
-                        .clickable { store.dispatch(TodoListAction.ShowItemDetail(todoItem)) }
-                        .height(48.dp),
+                    modifier = Modifier.animateItemPlacement(),
                     item = todoItem,
-                    onRemove = { store.dispatch(TodoListAction.Remove(todoItem.created)) },
+                    onItemDetailClicked = onItemDetailClicked,
+                    onRemove = onItemDeleteClicked,
                 )
             }
         }
@@ -71,18 +94,36 @@ fun TodoListScreen(store: TodoListStore) {
 private fun TodoListItem(
     modifier: Modifier = Modifier,
     item: TodoItem,
-    onRemove: () -> Unit,
+    onItemDetailClicked: (TodoItem) -> Unit,
+    onRemove: (TodoItem) -> Unit,
 ) {
-    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
-        Text(item.text)
+    Row(modifier = modifier
+        .fillMaxWidth()
+        .clickable { onItemDetailClicked(item) }
+        .height(48.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(item.text, style = MaterialTheme.typography.body1)
         Spacer(modifier = Modifier.weight(1f))
-        Text(DateTimeUtil.formatNoteDate(item.created))
-        IconButton(onClick = onRemove) {
+        Text(DateTimeUtil.formatNoteDate(item.created), style = MaterialTheme.typography.body1)
+        IconButton(onClick = { onRemove(item) }) {
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = "Removes todo item",
-                tint = Color.Black
+                tint = MaterialTheme.colors.onBackground
             )
         }
+    }
+}
+
+@Preview
+@Composable
+private fun TodoListContentPreview() {
+    MyApplicationTheme {
+        TodoListContent(
+            AppState(
+                todoList = listOf(
+                    TodoItem("Test", DateTimeUtil.now())
+                )
+            )
+        )
     }
 }

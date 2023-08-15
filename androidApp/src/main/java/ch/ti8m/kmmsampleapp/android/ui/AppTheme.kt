@@ -1,4 +1,4 @@
-package ch.ti8m.kmmsampleapp.android
+package ch.ti8m.kmmsampleapp.android.ui
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape

@@ -15,9 +15,18 @@ class TodoListRepository(
             value = item.text,
         )
     }
-    fun update(text: String, created: LocalDateTime) {
-        remove(created)
-        add(TodoItem(text = text, created))
+
+    fun update(item: TodoItem): Boolean {
+        val key = SETTINGS_KEY + item.created
+        return if (settings.hasKey(key)) {
+            settings.putString(
+                key = key,
+                value = item.text
+            )
+            true
+        } else {
+            false
+        }
     }
 
     fun remove(dateTime: LocalDateTime) {
@@ -36,7 +45,7 @@ class TodoListRepository(
                 }
                 .sortedByDescending { item -> item.created }
                 .toList()
-        } catch(ex: Exception) {
+        } catch (ex: Exception) {
             listOf(TodoItem(ex.toString(), DateTimeUtil.now()))
         }
     }
